@@ -4,15 +4,32 @@ void Map::renderStartEnd(){
 	int rad = 10;
 
 	CircleShape nodeCircle(rad);
-	nodeCircle.setFillColor(Color(0, 255, 0, 128));
 
 	if (p1.x != -1) {
+		nodeCircle.setFillColor(Color(0, 255, 0, 192));
 		nodeCircle.setPosition(p1.x - rad, p1.y - rad);
 		mapWindow->draw(nodeCircle);
 	}
 	if (p2.x != -1) {
+		nodeCircle.setFillColor(Color(255, 255, 0, 192));
 		nodeCircle.setPosition(p2.x - rad, p2.y - rad);
 		mapWindow->draw(nodeCircle);
+	}
+}
+
+void Map::renderRoute(){
+	CircleShape p(10);
+	p.setFillColor(Color(192, 255, 0, 255));
+	node* lastNode = nullptr;
+	for (node* current : currentRoute) {
+		if (lastNode != nullptr) {
+			if (current->x != p1.x && current->y != p1.y) {
+				p.setPosition(current->x - 10, current->y - 10);
+				mapWindow->draw(p);
+			}
+			drawLine(Vector2i(lastNode->x, lastNode->y), Vector2i(current->x, current->y));
+		}
+		lastNode = current;
 	}
 }
 
@@ -30,14 +47,18 @@ void Map::renderNodes(){
 	}
 }
 
-bool Map::isPressingButton(Sprite button){
-	if (Mouse::isButtonPressed(Mouse::Left)) {
-		Vector2i point = Mouse::getPosition(*mapWindow);
-		bool isInX = point.x >= button.getPosition().x && point.x <= button.getPosition().x + button.getScale().x;
-		bool isInY = point.y >= button.getPosition().y && point.y <= button.getPosition().y + button.getScale().y;
-		return isInX && isInY;
-	}
-	return false;
+void Map::drawLine(Vector2i point1, Vector2i point2){
+	Vertex line[] = {
+		Vertex((Vector2f)point1, Color(192, 255, 0, 255)),
+		Vertex((Vector2f)point2, Color(192, 255, 9, 255)) 
+	};
+	mapWindow->draw(line, 2, Lines);
+}
+
+bool Map::isPressingButton(Sprite button, Vector2i point){
+	bool isInX = point.x >= button.getPosition().x && point.x <= button.getPosition().x + button.getLocalBounds().width;
+	bool isInY = point.y >= button.getPosition().y && point.y <= button.getPosition().y + button.getLocalBounds().height;
+	return isInX && isInY;
 }
 
 
@@ -97,6 +118,7 @@ Map::~Map(){
 void Map::render() {
 	mapWindow->draw(interface);
 	if (debugMode) { renderNodes(); }
+	renderRoute();
 	renderStartEnd();
 
 	mapWindow->draw(startSearch);
@@ -128,11 +150,12 @@ void Map::update(){
 
 	if (Mouse::isButtonPressed(Mouse::Left) && leftMouse) {
 		leftMouse = false;
-		if (isAbodeNode(Mouse::getPosition(*mapWindow))) {
+		Vector2i mousePos = Mouse::getPosition(*mapWindow);
+		if (isAbodeNode(mousePos)) {
 			node* clickedNode = map.getAbodeNode(Mouse::getPosition(*mapWindow), 10);
 			cout << "\n[INFO]\n ID: " << clickedNode->id << ", X: " << clickedNode->x << ", Y: " << clickedNode->y << ", Name: " << clickedNode->name << "\n";
 
-			cout << "[Conexiones]: ";
+			cout << "[Conexiones]: ";	//Delete
 			if (clickedNode->adj.empty()) {
 				cout << "No hay nodos conectados." << endl;
 			}
@@ -143,24 +166,33 @@ void Map::update(){
 				cout << endl;
 			}
 
+			if (currentRoute.size() > 0) {
+				currentRoute.clear();
+				p1 = Vector2i(-1, 0);
+				p2 = Vector2i(-1, 0);
+			}
+
 			if (p1.x != clickedNode->x && p1.y != clickedNode->y) {
 				p2 = p1;
 				p1.x = clickedNode->x;
 				p1.y = clickedNode->y;
 			}
+		}
+		if (isPressingButton(startSearch, mousePos)) {
+			currentRoute = map.findShortestRoute(map.getAbodeNode(p2, 10), map.getAbodeNode(p1, 10));
 
-
-
-			if (isPressingButton(startSearch)) {
-				currentRoute = map.findShortestRoute(map.getAbodeNode(p2, 10), map.getAbodeNode(p1, 10));
-				cout << "Recorrido: ";
-				for (node* node : currentRoute) {
-					cout << node->id << "->";
-				}
+			cout << "Recorrido: "; //Delete
+			for (node* node : currentRoute) {
+				cout << node->id << "->";
 			}
-			if (isPressingButton(initRoute)) {
-				//hacer recorrido de la ruta
-			}
+		}
+		if (isPressingButton(initRoute, mousePos)) {
+			//hacer recorrido de la ruta
+		}
+		if (isPressingButton(cancelRoute, mousePos)) {
+			currentRoute.clear();
+			p1 = Vector2i(-1, 0);
+			p2 = Vector2i(-1, 0);
 		}
 	}
 	if (!Mouse::isButtonPressed(Mouse::Left)) {

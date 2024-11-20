@@ -36,7 +36,7 @@ void Graph::loadNodes() {
 		stringstream ss(rNode);
 		string segment;
 
-		while (getline(ss, segment, ' ')) {
+		while (getline(ss, segment, '_')) {
 			vars.push_back(segment);
 		}
 		int id = stoi(vars[0].substr(2, vars[0].size()));

@@ -24,8 +24,10 @@ private:
 	Vector2i p1, p2;
 
 	void renderStartEnd();
+	void renderRoute();
 	void renderNodes();
-	bool isPressingButton(Sprite);
+	void drawLine(Vector2i, Vector2i);
+	bool isPressingButton(Sprite, Vector2i);
 	void chargeFiles();
 
 public:

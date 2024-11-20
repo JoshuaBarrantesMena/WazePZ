@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <SFML/Graphics.hpp>
 #include <list>
 #include <vector>
 #include <fstream>
@@ -11,7 +12,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <queue>
-#include "Button.h"
+
+using namespace std;
+using namespace sf;
 
 struct node {
 	int id;
